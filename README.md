@@ -1,2 +1,2 @@
 # Machine-Learning
-script for machine-learnig
+scripts for machine-learnig
