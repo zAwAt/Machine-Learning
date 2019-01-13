@@ -1,5 +1,6 @@
 import numpy as np
 import sys,pickle
+#HOW TO LEARN?
 
 class NewralNet:
     def __init__(self,input_size,hide_size,output_size,dist_scale = 1.0):
