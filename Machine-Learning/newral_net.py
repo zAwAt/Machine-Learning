@@ -1,40 +1,55 @@
+import sys
+import os
+import pickle
+
 import numpy as np
-import sys,pickle
-#HOW TO LEARN?
+from excel_reader import *
+
+#This program is for python3.6.x
 
 class NewralNet:
-    def __init__(self,input_size,hide_size,output_size,dist_scale = 1.0):
+    def __init__(self,input_size,hide_size,output_size,lr = 0.01,dist_scale = 1.0):
         self.weights = {}
         self.diff_weights = {}
         self.weights["W1"] = dist_scale * np.random.rand(input_size,hide_size)
         self.weights["b1"] = np.zeros(hide_size)
         self.weights["W2"] = dist_scale * np.random.rand(hide_size,output_size)
         self.weights["b2"] = np.zeros(output_size)
-        self.lr = 0.01
+        self.lr = lr
         self.N = 0
+
+    def show_all_weights(self):
+        for key in self.weights.keys():
+            print( key,"=",self.weights[key].shape)
+            print(self.weights[key])
+            print()
+        print("showed all weights\n")
 
     def save_weights(self):
         for key in self.weights.keys():
-            with open(key + ".pickle","wb") as f:
-                pickle.dump(self.weights[key],f)
+            try:
+                with open(os.path.join(os.getcwd(),"weights",key + ".pickle"),"wb") as f:
+                    pickle.dump(self.weights[key],f)
+            except FileNotFoundError:
+                print("save failed",key)
+                print("End program")
+                sys.exit()
             print("saved ",key)
-        print("finished save all")
-        print()
+        print("finished save all weights\n")
 
     def load_weights(self):
         for key in self.weights.keys():
             try:
-                with open(key + ".pickle","rb") as f:
+                with open(os.path.join(os.getcwd(),"weights",key + ".pickle"),"rb") as f:
                     self.weights[key] = pickle.load(f)
                     print("loaded",key)
             except FileNotFoundError:
                 print("load failed",key)
                 print("End program")
                 sys.exit()
-        print("finished load all")
-        print()
+        print("finished load all weights\n")
 
-    def predict(self,x,t):
+    def predict(self,x):
         self.N = x.shape[0]
         if self.N == 0:
             print("N set as 0")
@@ -44,6 +59,7 @@ class NewralNet:
         z = self._sigmoid(a) #Z = sigmoid(A)
         i = np.dot(z,self.weights["W2"]) + self.weights["b2"] # I = Z*W2+b2
         y = self._softmax(i)
+        return y
 
     def learn(self,x,t):
         #FORWARD
@@ -66,7 +82,6 @@ class NewralNet:
         self.diff_weights["b1"] = np.sum(da,axis = 0) #diff_b1 = SUM{(dL/dA)}
         self._weight_update()
 
-
     def _sigmoid(self,array):
         return 1/(1+np.exp(-1*array))
 
@@ -87,16 +102,17 @@ class NewralNet:
 
     def _weight_update(self):
         for key in self.weights.keys():
-            print(self.weights[key])
             self.weights[key] = self.weights[key] - (self.lr * self.diff_weights[key])
-            print(self.weights[key])
-            print()
-        print("weights have been updated!")
+        print("updated all weights!\n")
 
-x = np.array([[1,-2],[2,-4],[3,-5]])
-t = np.array([[1,0],[0,1],[1,0]])
-
-net = NewralNet(2,3,2)
-for i in range(50):
+x,t = readxlsx("data.xlsx")
+net = NewralNet(3,5,3)
+net.show_all_weights()
+for i in range(10000):
+    random = np.random.choice(x.shape[0],20)
+    x_train = x[random]
+    t_train = t[random]
     net.learn(x,t)
-net.save_weights()
+xc = np.array([0.4,0.3,0.2])
+net.show_all_weights()
+print(net.predict(xc))
